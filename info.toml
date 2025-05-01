@@ -2,8 +2,7 @@
 name        = "Glacial Medals"
 author      = "Mattynator"
 category    = "MattyPlugins"
-version     = "0.0.1"
+version     = "0.1.0"
 
 [script]
 dependencies = [ "NadeoServices" ]
-exports = [ "exports/export.as" ]
