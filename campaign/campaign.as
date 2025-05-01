@@ -7,7 +7,7 @@ class Campaign
     array<Map@> maps;
     bool maps_loaded = false;
     bool medals_loaded = false;
-    dictionary mapid_to_maps_array_index;
+    dictionary mapuid_to_maps_array_index;
 
     uint map_records_coroutines_running = 0;
 
@@ -18,7 +18,15 @@ class Campaign
 
     void LoadMedalTimes(Json::Value@ medals_json)
     {
-        // TODO
+        for (uint i = 0; i < medals_json.Length; i++) 
+        {
+            uint index;
+            mapuid_to_maps_array_index.Get(medals_json[i]['mapUID'], index);
+            Map@ map = maps[index];
+            map.medals[MedalType::Author] = medals_json[i]['authorTime'];
+            map.medals[MedalType::Glacial] = medals_json[i]['glacialTime'];
+            map.medals[MedalType::Challenge] = medals_json[i]['challengeTime'];
+        }
         medals_loaded = true;
     }
 

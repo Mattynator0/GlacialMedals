@@ -1,7 +1,5 @@
 namespace Api
 {
-    Campaign@ campaign = CampaignManager::glacial_campaign;
-    
     string GetWSID() { return cast<CGameManiaPlanet>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.LocalUser.WebServicesUserId; }
     string GetRecordsReqUrlBase() { return "https://prod.trackmania.core.nadeo.online/v2/mapRecords/?accountIdList=" 
                                         + GetWSID() + "&mapId=";}
@@ -59,6 +57,7 @@ namespace Api
     // loads maps data (including PBs)
     void FetchMapsData()
     {
+        Campaign@ campaign = CampaignManager::glacial_campaign;
         // prevents loading the same campaign multiple times after spamming the button before the 'maps_loaded' flag is set
         while (fetch_maps_lock) yield();
 
@@ -79,6 +78,7 @@ namespace Api
 
     void FetchPersonalBestsCoro()
     {
+        Campaign@ campaign = CampaignManager::glacial_campaign;
         auto @maps = campaign.maps;
         
         campaign.map_records_coroutines_running = maps.Length;
@@ -112,20 +112,17 @@ namespace Api
         req.Start();
         while (!req.Finished()) yield();
 
-        data.map.pb_time = req.Json()["recordScore"]["time"];
+        Json::Value pb_json = req.Json();
+        if (pb_json.Length > 0)
+            data.map.pb_time = pb_json[0]["recordScore"]["time"];
 
         if (data.decrement_counter)
         {
-            if (data.map.campaign is null)
-            {
-                error("Map is not a part of campaign.");
-                return;
-            }
             data.map.campaign.map_records_coroutines_running--;
             // save records data when all coroutines finish
-            if (!data.map.campaign.AreRecordsLoading())
+            if (!CampaignManager::AreRecordsLoading())
             {
-                data.map.campaign.RecalculateMedalsCounts();
+                CampaignManager::RecalculateMedalsCounts();
             }
         }
     }

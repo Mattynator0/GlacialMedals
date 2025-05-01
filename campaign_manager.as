@@ -8,29 +8,40 @@ enum MedalType
 
 namespace CampaignManager
 {
-    bool initialized = false;
-
 	Campaign@ glacial_campaign;
-	MedalType selected_medal_type;
+	MedalType selected_medal_type = MedalType::Glacial;
     Json::Value glacial_campaign_json = Json::Object();
 
-    array<string> medal_names = {"Author Time", "Glacial Medal", "Challenge Medal"};
+    string club_id;
+    string campaign_id;
+
+    array<string> medal_names_full = {"Author Time", "Glacial Medal", "Challenge Medal"};
+    array<string> medal_names_first = {"Author", "Glacial", "Challenge"};
     array<uint> medals_achieved = {0, 0, 0, 0};
     array<uint> medals_total = {25, 25, 25, 75};
 
     void Init()
     {
+        FetchCampaignData();
         FetchGlacialCampaign();
-        FetchConfigFile();
-        initialized = true; // FIXME check if init still works
+        FetchMedalsData();
+    }
+
+    void FetchCampaignData()
+    {
+        const string config_url = "https://openplanet.dev/plugin/glacialmedals/config/campaign_data";
+
+        auto @config_req = Net::HttpGet(config_url);
+        while (!config_req.Finished()) yield();
+        auto config_json = config_req.Json();
+
+        club_id = config_json["clubID"];
+        campaign_id = config_json["campaignID"];
     }
 
     // fetches campaign data, then maps data
     void FetchGlacialCampaign() 
     {
-        const string club_id = "383";          // FIXME test values, change later!
-        const string campaign_id = "92460";    // FIXME test values, change later!
-
         string req_url = "https://live-services.trackmania.nadeo.live/api/token/club/" +
                         string(club_id) + "/campaign/" + string(campaign_id);
 
@@ -41,16 +52,11 @@ namespace CampaignManager
 
         glacial_campaign_json = req.Json();
         @glacial_campaign = Campaign(glacial_campaign_json);
-        FetchMapsData();
-    }
-
-    void FetchMapsData()
-    {
         Api::FetchMapsData();
     }
 
     // fetches a config file with medal times
-    void FetchConfigFile()
+    void FetchMedalsData()
     {
         const string config_url = "https://openplanet.dev/plugin/glacialmedals/config/medals_data";
 
@@ -113,13 +119,28 @@ namespace CampaignManager
         return glacial_campaign.AreMedalsLoading();
     }
 
-    uint GetMedalsAchieved()
+    uint GetMedalsAchieved(const MedalType&in medal_type)
+    {
+        return medals_achieved[medal_type];
+    }
+
+    uint GetMedalsTotal(const MedalType&in medal_type)
+    {
+        return medals_total[medal_type];
+    }
+
+    uint GetMedalsAchievedOverall()
     {
         return medals_achieved[3];
     }
 
-    uint GetMedalsTotal()
+    uint GetMedalsTotalOverall()
     {
         return medals_total[3];
+    }
+
+    string GetMedalName()
+    {
+        return medal_names_full[selected_medal_type];
     }
 }

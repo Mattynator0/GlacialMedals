@@ -6,10 +6,11 @@ class Browser
 	vec4 base_color = vec4(0.105, 0.488, 0.645, 1.0);
 	vec4 brighter_color = vec4(0.145, 0.588, 0.745, 1.0);
 	vec4 brightest_color = vec4(0.185, 0.688, 0.845, 1.0);
-	string base_circle = "\\$29b" + Icons::Circle + "\\$fff "; // TODO different colors for AT and Challenge Medal
+	string base_circle_glacial = "\\$29b" + Icons::Circle + "\\$fff ";
+	string base_circle_author = "\\$174" + Icons::Circle + "\\$fff ";
+	string base_circle_challenge = "\\$049" + Icons::Circle + "\\$fff ";
 
 	bool show_only_unbeaten_medals = false;
-	bool tiles_display = true;
 
 	uint window_w = 900;
 	uint window_h = 600;
@@ -32,7 +33,7 @@ class Browser
 
 	void RenderMenu() 
 	{
-    	if (UI::MenuItem(base_circle + "Glacial Medals", "", show_browser_window)) {
+    	if (UI::MenuItem(base_circle_glacial + "Glacial Medals", "", show_browser_window)) {
         	show_browser_window = !show_browser_window;
     	}
 	}
@@ -46,13 +47,13 @@ class Browser
 		//    |   O  Title   |   Campaign   |
 		//    |              |     info     |
 		//    |              |              |
-		//    |   Campaign   |  Map1  sm pb |
-		//    |   selection  |  Map2  sm pb |
-		//    |              |  Map3  sm pb |
+		//    |   Medal      |  Map1  m  pb |
+		//    |   selection  |  Map2  m  pb |
+		//    |              |  Map3  m  pb |
 		//    |              |  ...         |
 		//    |______________|______________|
 		//
-		//  sm - s314ke medal
+		//  m - chosen medal
 		//  pb - personal best
 
 		UI::PushStyleColor(UI::Col::Separator, base_color);
@@ -63,7 +64,7 @@ class Browser
 		UI::PushStyleColor(UI::Col::ButtonActive, brightest_color);
 
 		UI::SetNextWindowSize(window_w, window_h);
-		UI::Begin(base_circle + "Glacial Medals", show_browser_window, UI::WindowFlags::NoCollapse | UI::WindowFlags::NoScrollbar);
+		UI::Begin(base_circle_glacial + "Glacial Medals", show_browser_window, UI::WindowFlags::NoCollapse | UI::WindowFlags::NoScrollbar);
 		UI::Columns(2);
 
 		// ------------------------------------------------ LEFT SIDE ------------------------------------------------
@@ -96,7 +97,7 @@ class Browser
 
 		UI::BeginChild("RightContainer");
 		
-		DrawCampaignInfo();
+		DrawMedalInfo();
 
 		DrawMapsInfo();
 
@@ -107,7 +108,7 @@ class Browser
 	
 	void DrawTitle()
 	{
-		UI::BeginChild("TitleWrapper", vec2(-1, 200));
+		UI::BeginChild("TitleWrapper", vec2(-1, 250));
 		
 		if (UI::BeginTable("TitleTable", 2)) 
 		{
@@ -118,26 +119,24 @@ class Browser
 			uint padding = 25;
 			uint medal_x = 150;
 			uint medal_y = 150;
-			UI::BeginChild("MedalWrapper", vec2(medal_x + 2 * padding, medal_y + padding));
-			UI::SetCursorPos(UI::GetCursorPos() + vec2(padding, padding));
+			uint medal_y_offset = 15;
+			UI::BeginChild("MedalWrapper", vec2(medal_x + 2 * padding, medal_y + padding + medal_y_offset));
+			UI::SetCursorPos(UI::GetCursorPos() + vec2(padding, padding + medal_y_offset));
 			UI::Image(logo, vec2(medal_x, medal_y));
 			UI::EndChild(); // "MedalWrapper"
 	
 			UI::TableNextColumn();
 			UI::BeginChild("TitleTextWrapper");
 			UI::PushFont(base_large_font);
-			CenterText(base_circle + " Glacial Medals", vec2(0, -20));
+			CenterText(base_circle_glacial + " Glacial Medals", vec2(0, -20));
 			UI::PopFont();
 	
-			string medal_counter_text = base_circle + " " + CampaignManager::GetMedalsAchieved() + 
-										" / " + CampaignManager::GetMedalsTotal();
+			string medal_counter_text = base_circle_glacial + " " + CampaignManager::GetMedalsAchievedOverall() + 
+										" / " + CampaignManager::GetMedalsTotalOverall();
 			UI::PushFont(base_normal_font);
-			CenterText(medal_counter_text, vec2(-20, 70));
+			CenterText(medal_counter_text, vec2(0, 80));
 			UI::SameLine();
 			UI::PushFont(base_small_font);
-			if (UI::Button(Icons::Refresh)) {
-				CampaignManager::FetchMapsData();
-			}
 			UI::PopFont(); // small
 			if (CampaignManager::AreRecordsLoading()) {
 				CenterText("Loading...", vec2(0, 125));
@@ -157,31 +156,6 @@ class Browser
 		UI::PushStyleColor(UI::Col::TabHovered, brightest_color);
 		UI::PushStyleColor(UI::Col::TabActive, brighter_color);
 
-		string checkbox_label;
-		if (tiles_display) 
-			checkbox_label = " Tiles";
-		else checkbox_label = " List";
-
-		if (tiles_display)
-		{
-			if (UI::Button(Icons::Bars))
-				tiles_display = false;
-		}
-		else
-		{
-			if (UI::Button(Icons::ThLarge))
-				tiles_display = true;
-		}
-
-		if (tiles_display)
-			DrawCampaignSelectionMenuTiles();
-		else DrawCampaignSelectionMenuList();
-
-		UI::PopStyleColor(3);
-	}
-
-	void DrawCampaignSelectionMenuList()
-	{
 		if (!CampaignManager::glacial_campaign.medals_loaded)
 		{
 			UI::Text("Loading...");
@@ -190,14 +164,13 @@ class Browser
 		
 		UI::PushStyleColor(UI::Col::TableRowBg, vec4(.25, .25, .25, .2));
 		UI::PushFont(base_normal_font);
-		if (UI::BeginTable("CampaignsTableList", 5, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::PadOuterX))
+		if (UI::BeginTable("CampaignsTableList", 4, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::PadOuterX))
 		{
 			UI::TableSetupColumn("Name", UI::TableColumnFlags::WidthStretch);
 			UI::TableSetupColumn("##achieved", UI::TableColumnFlags::WidthFixed);
 			UI::TableSetupColumn("Progress   ", UI::TableColumnFlags::WidthFixed);
 			UI::TableSetupColumn("##info", UI::TableColumnFlags::WidthFixed);
-			UI::TableSetupColumn("##refresh", UI::TableColumnFlags::WidthFixed);
-			UI::TableSetupScrollFreeze(5, 1);
+			UI::TableSetupScrollFreeze(4, 1);
 
 			UI::TableHeadersRow();
 
@@ -205,32 +178,24 @@ class Browser
 			{
 				UI::TableNextRow(UI::TableRowFlags::None, 30);
 				Campaign@ campaign = CampaignManager::glacial_campaign;
-				MedalType@ medal_type = CampaignManager::GetSelectedMedalType();
+				MedalType medal_type = MedalType(i);
 
 				UI::TableNextColumn(); // "Name"
 				UI::AlignTextToFramePadding();
-				UI::Text(CampaignManager::medal_names[medal_type]);
+				UI::Text(CampaignManager::medal_names_full[medal_type]);
 
 				UI::TableNextColumn(); // "##achieved"
 				if (CampaignManager::medals_achieved[medal_type] == CampaignManager::medals_total[medal_type])
-					UI::Text(base_circle);
+					UI::Text(GetBaseCircle(MedalType(i)));
 
 				UI::TableNextColumn(); // "Progress"
-				UI::Text(tostring(CampaignManager::GetMedalsAchieved()) + " / " + CampaignManager::GetMedalsTotal());
+				UI::Text(tostring(" " + CampaignManager::GetMedalsAchieved(medal_type)) + " / " + CampaignManager::GetMedalsTotal(medal_type));
 
 				UI::TableNextColumn(); // "##info"
 				UI::PushFont(base_small_font);
 				UI::PushID("CampaignInfoButton" + tostring(i));
 				if (UI::Button(Icons::InfoCircle))
-					CampaignManager::SelectMedalType(i);
-				UI::PopID();
-				UI::PopFont(); // small
-
-				UI::TableNextColumn(); // "##refresh"
-				UI::PushFont(base_small_font);
-				UI::PushID("CampaignRefreshButton" + tostring(i));
-				if (UI::Button(Icons::Refresh))
-					CampaignManager::FetchMapsData();
+					CampaignManager::SelectMedalType(MedalType(i));
 				UI::PopID();
 				UI::PopFont(); // small
 			}
@@ -239,81 +204,27 @@ class Browser
 		}
 		UI::PopFont(); // normal
 		UI::PopStyleColor(); // TableRowBg
+		UI::PopStyleColor(3);
 	}
-	void DrawCampaignSelectionMenuTiles()
+
+	string GetBaseCircle(const MedalType&in medal_type)
 	{
-		const vec2 button_size = vec2(80, 80);
-		const float button_padding = 5; // also the minimum value of 'b', for context look at the diagram below
-		const uint buttons_per_row = Math::Max(1, uint(UI::GetWindowSize().x / (button_size.x + 2 * button_padding)));
-
-		UI::BeginChild("TableWrapper", vec2(), false, UI::WindowFlags::NoScrollbar);
-		if (CampaignManager::AreMedalsLoading())
-		{
-			UI::Text("Loading...");
-			UI::EndChild(); // "TableWrapper"
-			return;
+		switch (medal_type) {
+			case MedalType::Author:
+				return base_circle_author;
+			case MedalType::Challenge:
+				return base_circle_challenge;
+			default:
+				return base_circle_glacial;
 		}
-		if (UI::BeginTable("CampaignsTableTiles", buttons_per_row))
-		{
-			UI::PushStyleVar(UI::StyleVar::FrameRounding, 10);
-
-			// button spacing (value of 'a' is fixed)
-			//  
-			// |    __      __      __    |
-			// |   |__|    |__|    |__|   |
-			// |                          |
-			//      a       a       a
-			//  <-><--><--><--><--><--><->
-			//   b      2b      2b      b
-			// 
-			for (uint i = 0; i < MedalType::Count; i++)
-			{
-				UI::TableNextColumn();
-				UI::Dummy(vec2(0, 2 * button_padding));
-					
-				float whole_width = UI::GetWindowSize().x;
-
-				// look at the figure above to understand what 'a' and 'b' are
-				float a = button_size.x;
-				float b = (whole_width - a * buttons_per_row) / (buttons_per_row * 2);
-				UI::SetCursorPos(UI::GetCursorPos() + vec2(b, 0)); // center button
-
-				UI::PushID("CampaignButton" + tostring(i));
-				if (UI::Button("", button_size))
-				{
-					CampaignManager::SelectMedalType(i);
-				}
-				UI::PopID();
-				
-				UI::PushFont(base_large_font);
-				if (Draw::MeasureString(CampaignManager::medal_names[i]).x > button_size.x - 14) {
-					UI::PopFont();
-					UI::PushFont(base_normal_font);
-				}
-				if (Draw::MeasureString(CampaignManager::medal_names[i]).x > button_size.x - 14) {
-					UI::PopFont();
-					UI::PushFont(base_small_font);
-				}
-				vec2 text_size = Draw::MeasureString(CampaignManager::medal_names[i]);
-				float move_short_name_x = (button_size.x - text_size.x) * 0.5f;
-				float additional_offset = 1.0; // for some reason the text is slightly off center without this
-				UI::SetCursorPos(UI::GetCursorPos() + vec2(b + move_short_name_x + additional_offset, -35 - (text_size.y))); // center text
-				UI::Text(CampaignManager::medal_names[i]);
-				UI::PopFont();
-			}
-			UI::PopStyleVar();
-
-			UI::EndTable(); // "CampaignsTable"
-		}
-		UI::EndChild(); // "TableWrapper"
 	}
 
-	void DrawCampaignInfo()
+	void DrawMedalInfo()
 	{
 		if (!user_has_permissions)
 			UI::Text("You don't have permissions to play maps locally.\n\nThe \"Play\" buttons will be disabled.");
-		UI::BeginChild("CampaignInfo", vec2(-1, 150));
-		if (UI::BeginTable("CampaignInfoTable", 2))
+		UI::BeginChild("MedalInfo", vec2(-1, 150));
+		if (UI::BeginTable("MedalInfoTable", 2))
 		{
 			UI::TableSetupColumn("##name", UI::TableColumnFlags::WidthStretch);
 			UI::TableSetupColumn("##progress", UI::TableColumnFlags::WidthStretch);
@@ -321,34 +232,29 @@ class Browser
 			UI::PushFont(base_large_font);
 
 			UI::TableNextColumn();
-			UI::BeginChild("CampaignName");
+			UI::BeginChild("MedalName");
 			// center the text
 			vec2 container_size = UI::GetContentRegionAvail();
-			vec2 campaignname_text_size = Draw::MeasureString(CampaignManager::GetCampaignName());
-			UI::SetCursorPos((container_size - campaignname_text_size) * 0.5f);
-			UI::Text(CampaignManager::GetCampaignName()); // full campaign name
-			UI::EndChild(); // "CampaignName"
+			vec2 campaignname_text_size = Draw::MeasureString(CampaignManager::GetMedalName());
+			UI::SetCursorPos((container_size - campaignname_text_size) * 0.5f + vec2(20, 0));
+			UI::Text(CampaignManager::GetMedalName()); // full campaign name
+			UI::EndChild(); // "MedalName"
 			
 			UI::TableNextColumn();
-			UI::BeginChild("CampaignMedalCounter");
-			string medalcounter_text = base_circle + " " + tostring(CampaignManager::GetMedalsAchieved()) 
-							   + " / " + tostring(CampaignManager::GetMedalsTotal());
+			UI::BeginChild("MedalCounter");
+			string medalcounter_text = GetBaseCircle(CampaignManager::GetSelectedMedalType())
+								+ " " + tostring(CampaignManager::GetMedalsAchieved(CampaignManager::GetSelectedMedalType())) 
+								+ " / " + tostring(CampaignManager::GetMedalsTotal(CampaignManager::GetSelectedMedalType()));
 			container_size = UI::GetContentRegionAvail();
 			vec2 medalcounter_text_size = Draw::MeasureString(medalcounter_text);
-			UI::SetCursorPos((container_size - medalcounter_text_size) * 0.5f + vec2(-10, 0)); // -10 to account for the refresh button
+			UI::SetCursorPos((container_size - medalcounter_text_size) * 0.5f);
 			UI::Text(medalcounter_text);
-			UI::SameLine();
-			UI::PushFont(base_small_font);
-			if (!CampaignManager::AreRecordsLoading() && UI::Button(Icons::Refresh)) {
-				CampaignManager::FetchMapsData();
-			}
-			UI::PopFont(); // small
-			UI::EndChild(); // "CampaignMedalCounter"
+			UI::EndChild(); // "MedalCounter"
 
 			UI::PopFont(); // large
-			UI::EndTable(); // "CampaignInfoTable"
+			UI::EndTable(); // "MedalInfoTable"
 		}
-		UI::EndChild(); // "CampaignInfo"
+		UI::EndChild(); // "MedalInfo"
 	}
 
 	void DrawMapsInfo()
@@ -380,7 +286,7 @@ class Browser
 			{
 				Map map = CampaignManager::GetMap(i);
 				// skip if checkbox is ticked AND (medal is achieved OR doesn't exist)
-				if (show_only_unbeaten_medals && map.MedalAchieved())
+				if (show_only_unbeaten_medals && map.MedalAchieved(CampaignManager::GetSelectedMedalType()))
 					continue;
 
 				UI::TableNextRow(UI::TableRowFlags::None, 30);
@@ -391,11 +297,11 @@ class Browser
 
 				UI::TableNextColumn(); // "##padding"
 				UI::TableNextColumn(); // "Medal"
-				UI::Text(Time::Format(map.GetMedalTime(i)));
+				UI::Text(Time::Format(map.GetMedalTime(CampaignManager::GetSelectedMedalType())));
 
 				UI::TableNextColumn(); // "##achieved"
-				if (map.MedalAchieved())
-					UI::Text(base_circle);
+				if (map.MedalAchieved(CampaignManager::GetSelectedMedalType()))
+					UI::Text(GetBaseCircle(CampaignManager::GetSelectedMedalType()));
 
 				UI::TableNextColumn(); // "PB"
 				if (map.PbExists())

@@ -4,7 +4,7 @@ class Map
     string id;
     string name;
     uint pb_time = uint(-1) - 1;
-    array<uint> medals(MedalType::Count, uint(-1) - 2);
+    array<uint> medals(MedalType::Count, uint(-1) - 2); // args are array size and default value
     string download_url;
     Campaign@ campaign;
 
