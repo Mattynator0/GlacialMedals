@@ -1,0 +1,9 @@
+[meta]
+name        = "Glacial Medals"
+author      = "Mattynator"
+category    = "MattyPlugins"
+version     = "0.0.1"
+
+[script]
+dependencies = [ "NadeoServices" ]
+exports = [ "exports/export.as" ]
