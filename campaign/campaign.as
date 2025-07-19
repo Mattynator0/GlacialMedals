@@ -56,4 +56,14 @@ class Campaign
     {
         Api::FetchMapsData();
     }
+
+    bool MapExists(const string&in uid) {
+        return mapuid_to_maps_array_index.Exists(uid);
+    }
+
+    Map@ GetMapByUid(const string&in uid) {
+        uint index;
+        mapuid_to_maps_array_index.Get(uid, index);
+        return maps[index];
+    }
 }
