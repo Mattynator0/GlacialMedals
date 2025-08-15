@@ -14,7 +14,9 @@ void Main()
     while (!NadeoServices::IsAuthenticated("NadeoServices")) yield();
 
 	@browser = Browser();
+#if DEPENDENCY_ULTIMATEMEDALSEXTENDED
 	RegisterUME();
+#endif
 	startnew(Api::WatchForMapChange);
 }
 
@@ -39,6 +41,8 @@ void RenderMenu() {
 		browser.RenderMenu();
 }
 
+#if DEPENDENCY_ULTIMATEMEDALSEXTENDED
 void OnDestroyed() {
 	OnDestroyedUME();
 }
+#endif
