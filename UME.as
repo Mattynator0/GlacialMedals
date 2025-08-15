@@ -8,15 +8,17 @@ class UMEGlacialMedal : UltimateMedalsExtended::IMedal {
         return c;
     }
     
+    bool hasMedal;
     string uid;
 
     void UpdateMedal(const string &in uid) override {
         this.uid = uid;
+        hasMedal = CampaignManager::glacial_campaign.MapExists(uid);
     }
 
     bool HasMedalTime(const string &in uid) override {
         if (uid != this.uid) {return false;}
-        return CampaignManager::glacial_campaign.MapExists(uid);
+        return hasMedal;
     }
 
     uint GetMedalTime() override {
@@ -33,15 +35,17 @@ class UMEChallengeMedal : UltimateMedalsExtended::IMedal {
         return c;
     }
 
+    bool hasMedal;
     string uid;
 
     void UpdateMedal(const string &in uid) override {
         this.uid = uid;
+        hasMedal = CampaignManager::glacial_campaign.MapExists(uid);
     }
 
     bool HasMedalTime(const string &in uid) override {
         if (uid != this.uid) {return false;}
-        return CampaignManager::glacial_campaign.MapExists(uid);
+        return hasMedal;
     }
 
     uint GetMedalTime() override {
