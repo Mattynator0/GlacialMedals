@@ -7,20 +7,20 @@ class UMEGlacialMedal : UltimateMedalsExtended::IMedal {
         c.icon = "\\$29b" + Icons::Circle;
         return c;
     }
+    
+    string uid;
 
-    void UpdateMedal(const string &in uid) override {}
+    void UpdateMedal(const string &in uid) override {
+        this.uid = uid;
+    }
 
     bool HasMedalTime(const string &in uid) override {
+        if (uid != this.uid) {return false;}
         return CampaignManager::glacial_campaign.MapExists(uid);
     }
 
     uint GetMedalTime() override {
-        auto app = cast<CGameManiaPlanet>(GetApp());
-        if (app.RootMap is null)
-            return 0;
-
-        const string uid = app.RootMap.EdChallengeId;
-        Map@ map = CampaignManager::glacial_campaign.GetMapByUid(uid);
+        Map@ map = CampaignManager::glacial_campaign.GetMapByUid(this.uid);
         return map.GetMedalTime(MedalType::Glacial);
     }
 }
@@ -33,19 +33,19 @@ class UMEChallengeMedal : UltimateMedalsExtended::IMedal {
         return c;
     }
 
-    void UpdateMedal(const string &in uid) override {}
+    string uid;
+
+    void UpdateMedal(const string &in uid) override {
+        this.uid = uid;
+    }
 
     bool HasMedalTime(const string &in uid) override {
+        if (uid != this.uid) {return false;}
         return CampaignManager::glacial_campaign.MapExists(uid);
     }
 
     uint GetMedalTime() override {
-        auto app = cast<CGameManiaPlanet>(GetApp());
-        if (app.RootMap is null)
-            return 0;
-
-        const string uid = app.RootMap.EdChallengeId;
-        Map@ map = CampaignManager::glacial_campaign.GetMapByUid(uid);
+        Map@ map = CampaignManager::glacial_campaign.GetMapByUid(this.uid);
         return map.GetMedalTime(MedalType::Challenge);
     }
 }
