@@ -1,5 +1,3 @@
-
-
 class Campaign
 {
     string name;

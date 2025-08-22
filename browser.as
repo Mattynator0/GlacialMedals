@@ -16,17 +16,16 @@ class Browser
 	uint window_h = 600;
 
 	UI::Texture@ logo;
-	UI::Font@ base_large_font;
-	UI::Font@ base_normal_font;
-	UI::Font@ base_small_font;
+	UI::Font@ base_font;
+	float large_font_size = 26;
+	float normal_font_size = 20;
+	float small_font_size = 16;
 
 	Browser()
 	{
 		@logo = UI::LoadTexture("logo.png");
 
-		@base_large_font = UI::LoadFont("DroidSans.ttf", 26, -1, -1 , true, true, true);
-		@base_normal_font = UI::LoadFont("DroidSans.ttf", 20, -1, -1 , true, true, true);
-		@base_small_font = UI::LoadFont("DroidSans.ttf", 16, -1, -1 , true, true, true);
+		@base_font = UI::LoadFont("DroidSans.ttf");
 
 		CampaignManager::Init();
 	}
@@ -127,21 +126,21 @@ class Browser
 	
 			UI::TableNextColumn();
 			UI::BeginChild("TitleTextWrapper");
-			UI::PushFont(base_large_font);
+			UI::PushFontSize(large_font_size);
 			CenterText(base_circle_glacial + " Glacial Medals", vec2(0, -20));
-			UI::PopFont();
+			UI::PopFontSize();
 	
 			string medal_counter_text = base_circle_glacial + " " + CampaignManager::GetMedalsAchievedOverall() + 
 										" / " + CampaignManager::GetMedalsTotalOverall();
-			UI::PushFont(base_normal_font);
+			UI::PushFontSize(normal_font_size);
 			CenterText(medal_counter_text, vec2(0, 80));
 			UI::SameLine();
-			UI::PushFont(base_small_font);
-			UI::PopFont(); // small
+			UI::PushFontSize(small_font_size);
+			UI::PopFontSize(); // small
 			if (CampaignManager::AreRecordsLoading()) {
 				CenterText("Loading...", vec2(0, 125));
 			}
-			UI::PopFont(); // normal
+			UI::PopFontSize(); // normal
 
 			UI::EndChild(); // "TitleTextWrapper"
 			UI::EndTable(); // "TitleTable"
@@ -163,7 +162,7 @@ class Browser
 		}
 		
 		UI::PushStyleColor(UI::Col::TableRowBg, vec4(.25, .25, .25, .2));
-		UI::PushFont(base_normal_font);
+		UI::PushFontSize(normal_font_size);
 		if (UI::BeginTable("CampaignsTableList", 4, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::PadOuterX))
 		{
 			UI::TableSetupColumn("Name", UI::TableColumnFlags::WidthStretch);
@@ -192,17 +191,17 @@ class Browser
 				UI::Text(tostring(" " + CampaignManager::GetMedalsAchieved(medal_type)) + " / " + CampaignManager::GetMedalsTotal(medal_type));
 
 				UI::TableNextColumn(); // "##info"
-				UI::PushFont(base_small_font);
+				UI::PushFontSize(small_font_size);
 				UI::PushID("CampaignInfoButton" + tostring(i));
 				if (UI::Button(Icons::InfoCircle))
 					CampaignManager::SelectMedalType(MedalType(i));
 				UI::PopID();
-				UI::PopFont(); // small
+				UI::PopFontSize(); // small
 			}
 
 			UI::EndTable(); // "CampaignsTableList"
 		}
-		UI::PopFont(); // normal
+		UI::PopFontSize(); // normal
 		UI::PopStyleColor(); // TableRowBg
 		UI::PopStyleColor(3);
 	}
@@ -229,7 +228,7 @@ class Browser
 			UI::TableSetupColumn("##name", UI::TableColumnFlags::WidthStretch);
 			UI::TableSetupColumn("##progress", UI::TableColumnFlags::WidthStretch);
 			
-			UI::PushFont(base_large_font);
+			UI::PushFontSize(large_font_size);
 
 			UI::TableNextColumn();
 			UI::BeginChild("MedalName");
@@ -251,7 +250,7 @@ class Browser
 			UI::Text(medalcounter_text);
 			UI::EndChild(); // "MedalCounter"
 
-			UI::PopFont(); // large
+			UI::PopFontSize(); // large
 			UI::EndTable(); // "MedalInfoTable"
 		}
 		UI::EndChild(); // "MedalInfo"
@@ -267,7 +266,7 @@ class Browser
 		// a single whitespace at the beginning of the checkbox label is intentional and used as padding
 		show_only_unbeaten_medals = UI::Checkbox(" Only show maps with an unachieved medal", show_only_unbeaten_medals);
 		UI::PushStyleColor(UI::Col::TableRowBg, vec4(.25, .25, .25, .2));
-		UI::PushFont(base_small_font);
+		UI::PushFontSize(small_font_size);
 
 		uint n_columns = 6;
 		if (UI::BeginTable("MapsTable", n_columns, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::PadOuterX))
@@ -319,7 +318,7 @@ class Browser
 			}
 			UI::EndTable(); // "MapsTable"
 		}
-		UI::PopFont();
+		UI::PopFontSize(); // small
 		UI::PopStyleColor(5); // TableRowBg, Frame, Checkmark
 		UI::EndChild(); // "Maps"
 	}
@@ -331,4 +330,5 @@ class Browser
 		UI::SetCursorPos((container_size - text_size) * 0.5f + additional_offset);
 		UI::Text(text);
 	}
+
 }
